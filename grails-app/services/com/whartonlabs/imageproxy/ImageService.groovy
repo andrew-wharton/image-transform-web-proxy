@@ -1,7 +1,9 @@
 package com.whartonlabs.imageproxy
 
+import grails.plugin.cache.Cacheable
 import org.apache.commons.io.IOUtils
 import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.imgscalr.Scalr
 
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
@@ -12,7 +14,7 @@ import java.awt.image.BufferedImage
 
 class ImageService {
 
-    private String originalBase = "http://cdn.deciduouspress.com.au.s3-website-ap-southeast-1.amazonaws.com/image"
+    private String originalBase = "http://cdn.deciduouspress.com.au.s3-website-ap-southeast-1.amazonaws.com"
 
     GrailsApplication grailsApplication
 
@@ -34,7 +36,7 @@ class ImageService {
         } else if(params.width || params.height) {
             processedImage = Scalr.resize(originalImage, Scalr.Method.ULTRA_QUALITY, params.width ? Scalr.Mode.FIT_TO_WIDTH : Scalr.Mode.FIT_TO_HEIGHT, params.width ? params.width as int: params.height as int)
         } else {
-            processedImage = imageBytes
+            return imageBytes
         }
 
         return writeToByteArray(processedImage, 0.95f)
