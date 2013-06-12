@@ -89,3 +89,27 @@ log4j = {
            'org.hibernate',
            'net.sf.ehcache.hibernate'
 }
+
+grails.cache.config = {
+    defaults {
+        maxElementsInMemory 100
+        eternal false
+        overflowToDisk false
+        maxElementsOnDisk 0
+        memoryStoreEvictionPolicy 'LRU'
+        timeToIdleSeconds 60*2
+        timeToLiveSeconds 60*2
+    }
+
+    cache {
+        name 'originalImages'
+        overflowToDisk true
+        maxElementsOnDisk 10000
+        timeToIdleSeconds 60*60*24
+        timeToLiveSeconds 60*60*24
+    }
+
+    diskStore {
+        temp true
+    }
+}

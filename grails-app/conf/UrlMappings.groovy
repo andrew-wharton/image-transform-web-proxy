@@ -1,13 +1,8 @@
 class UrlMappings {
 
 	static mappings = {
-		"/$controller/$action?/$id?"{
-			constraints {
-				// apply constraints here
-			}
-		}
-
-		"/"(view:"/index")
+		"/$pathToFile**"(controller: "image")
+		//"404"(view: '/notFound')
 		"500"(view:'/error')
 	}
 }
