@@ -80,11 +80,11 @@ class ImageService {
             } else {
                 cropWindow.height = (originalImageRatio / desiredRatio) * originalImage.height
                 int numberOfYPixelsToRemove = originalImage.height - cropWindow.height
-                cropWindow.y = numberOfPixelsYToRemove / 2 // horizontally center the crop
+                cropWindow.y = numberOfYPixelsToRemove / 2 // horizontally center the crop
             }
 
             if(xOffset) {
-                cropWindow.x = cropWindow.x + xOffset
+                cropWindow.x = cropWindow.x + xOffset >= 0 ? cropWindow.x + xOffset : 0
             }
 
             return Scalr.crop(originalImage, cropWindow.x as int, cropWindow.y as int, cropWindow.width as int, cropWindow.height as int)
