@@ -1,5 +1,8 @@
 # image-transform-web-proxy
 
+## Current Status
+At present this project is in the **experimental** stage and is not recommended for use in a production environment. It contains no unit, integration or functional tests, has very little exception and error handling and has many configuration values hard coded.
+
 ## Introduction
 
 The Image Transform Web Proxy is designed to provide a transparent layer of image manipulation functionality over an existing store of images available on the web.
