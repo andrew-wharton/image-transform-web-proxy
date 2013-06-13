@@ -9,12 +9,12 @@ The typical use case is that I have images stored and being served from eg. Amaz
 ## API
 All GET parameters are optional. If none are given, then the image is served unmodified. 
 
-The processing is broken into 3 stages, which affects the order in which the transformations are applied. The stages are *trim*, *crop* and *scale*, which are applied in this order.
+The processing pipeline is broken into 3 stages, which affects the order in which the transformations are applied. The stages are *trim*, *crop* and *scale*, which are applied in this order, with the output image from the previous stage being the input for the next stage in the pipeline.
 
-### Trim
+### Trim Stage
 Trim parameters provide relatively low-level operations that remove the number of pixels specified from the corresponding side of the image. The parameters are *trim_left*, *trim_right*, *trim_top*, *trim_bottom*. These are default to 0 if not specified.
 
-### Crop
+### Crop Stage
 Crop parameters provide higher level operations with sensible defaults.
 
 *crop_ratio*: Allows you to specify the desired aspect ratio of the image as a decimal number representing the image width as a proportion of it height, similar to how aspect ratios are defined for cinema and television. For example, "crop_ratio=1.33" will yield a 4:3 image and "crop_ratio=1.78" will yield a 16:9 image. By default the cropped image will as large as possible, given the aspect ratio of the original image and be both horizontally and vertically centered.
@@ -25,12 +25,21 @@ Crop parameters provide higher level operations with sensible defaults.
 
 *crop_y_offset*: Same as *crop_x_offset, except for the y axis. Positive values move the crop window down, negative values move crop window up.
 
-### Scale
+### Scale Stage
 Scales the image width and height to the given dimensions. If only one dimension is given, then the image will be scaled proportionally. If both dimensions are given then the image will be stretched to match the specified dimensions, regardless of it's original aspect ratio.
+
+*width*: scales the output image width to this value in pixels.
+
+*height*: scales the output image height to this value in pixels.
+
+## Configuration Options
+
+TODO
 
 ## Architecture Overview
 
-
-
+TODO
 
 ## Implementation Overview
+
+TODO
