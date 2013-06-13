@@ -27,15 +27,20 @@ class ImageService {
      * @param params.right Number of pixels to trim from the right edge
      * @return the cropped JPEG image bytes
      */
-    BufferedImage trim(BufferedImage image, Map params) {
+    BufferedImage trim(BufferedImage originalImage, Map params) {
+        Map cropWindow = calculateCropWindowForTrimParams(originalImage, params)
+        return Scalr.crop(originalImage, cropWindow.x, cropWindow.y, cropWindow.width, cropWindow.height)
+    }
+
+    private Map calculateCropWindowForTrimParams(BufferedImage image, Map params) {
         Map cropWindow = [
             x: params.trim_left ? Integer.parseInt(params.trim_left) : 0,
             y: params.trim_top ? Integer.parseInt(params.trim_top) : 0,
         ]
-        cropWindow.width = (originalImage.width - cropWindow.x - (params.trim_right ? Integer.parseInt(params.trim_right) : 0))
-        cropWindow.height = (originalImage.height - cropWindow.y - (params.trim_bottom ? Integer.parseInt(params.trim_bottom) : 0))
+        cropWindow.width = (image.width - cropWindow.x - (params.trim_right ? Integer.parseInt(params.trim_right) : 0))
+        cropWindow.height = (image.height - cropWindow.y - (params.trim_bottom ? Integer.parseInt(params.trim_bottom) : 0))
 
-        return Scalr.crop(originalImage, cropWindow.x, cropWindow.y, cropWindow.width, cropWindow.height)
+        return cropWindow
     }
 
     /**
@@ -52,44 +57,101 @@ class ImageService {
      * @return the cropped BufferedImage
      */
     BufferedImage crop(BufferedImage originalImage, Map params) {
-
         if(!params.crop_ratio) {
             return originalImage
         } else {
-
-            // parse input values and add defaults where not specified
-            double desiredRatio = params.crop_ratio as double
-            int xOffset = params.crop_x_offset ? params.crop_x_offset as int : 0
-            int yOffset = params.crop_y_offset ? params.crop_y_offset as int : 0
-            double shrink = params.crop_shrink ? params.crop_shrink as double : 1.0
-
-            // calculate the crop window
-            Map cropWindow = [
-                x: 0,
-                y: 0,
-                width: originalImage.width,
-                height: originalImage.height
-            ]
-
-            double originalImageRatio = (originalImage.width / originalImage.height) as double
-
-            if(originalImageRatio > desiredRatio) {
-                cropWindow.width = (desiredRatio / originalImageRatio) * originalImage.width
-                int numberOfXPixelsToRemove = originalImage.width - cropWindow.width
-                cropWindow.x = numberOfXPixelsToRemove / 2 // horizontally center the crop
-            } else {
-                cropWindow.height = (originalImageRatio / desiredRatio) * originalImage.height
-                int numberOfYPixelsToRemove = originalImage.height - cropWindow.height
-                cropWindow.y = numberOfYPixelsToRemove / 2 // horizontally center the crop
-            }
-
-            if(xOffset) {
-                cropWindow.x = cropWindow.x + xOffset >= 0 ? cropWindow.x + xOffset : 0
-            }
-
+            Map cropWindow = calculateCropWindowForCropParams(originalImage, params)
             return Scalr.crop(originalImage, cropWindow.x as int, cropWindow.y as int, cropWindow.width as int, cropWindow.height as int)
-
         }
+    }
+
+    private static Map calculateCropWindowForCropParams(originalImage, params) {
+        // parse input values and add defaults where not specified
+        double desiredRatio = params.crop_ratio as double
+        int xOffset = params.crop_x_offset ? params.crop_x_offset as int : 0
+        int yOffset = params.crop_y_offset ? params.crop_y_offset as int : 0
+        double shrink = params.crop_shrink ? params.crop_shrink as double : 1.0
+
+        Map cropWindow = [
+            x: 0,
+            y: 0,
+            width: originalImage.width,
+            height: originalImage.height
+        ]
+        println cropWindow
+        Map ratioCropWindow = calculateCropWindowForRatio(originalImage, cropWindow, desiredRatio)
+        println ratioCropWindow
+        Map shrinkCropWindow = (shrink < 1.0) ? calculateCropWindowForShrink(ratioCropWindow, shrink) : ratioCropWindow
+        println shrinkCropWindow
+        Map xOffsetCropWindow = xOffset ? calculateCropWindowForXOffset(originalImage, shrinkCropWindow, xOffset) : shrinkCropWindow
+        println xOffsetCropWindow
+        Map yOffsetCropWindow = yOffset ? calculateCropWindowForYOffset(originalImage, xOffsetCropWindow, yOffset) : xOffsetCropWindow
+        println yOffsetCropWindow
+        return yOffsetCropWindow
+    }
+
+    private static Map calculateCropWindowForRatio(BufferedImage originalImage, Map existingCropWindow, double desiredRatio) {
+
+        Map newCropWindow = existingCropWindow.clone()
+
+        double originalImageRatio = (originalImage.width / originalImage.height) as double
+
+        if(originalImageRatio > desiredRatio) {
+            newCropWindow.width = (desiredRatio / originalImageRatio) * originalImage.width
+            int numberOfXPixelsToRemove = originalImage.width - newCropWindow.width
+            newCropWindow.x = numberOfXPixelsToRemove / 2 // horizontally center the crop
+        } else {
+            newCropWindow.height = (originalImageRatio / desiredRatio) * originalImage.height
+            int numberOfYPixelsToRemove = originalImage.height - newCropWindow.height
+            newCropWindow.y = numberOfYPixelsToRemove / 2 // horizontally center the crop
+        }
+
+        return newCropWindow
+    }
+
+    private static Map calculateCropWindowForShrink(final Map cropWindow, final double shrinkRatio) {
+
+        int shrunkWidth = (cropWindow.width * shrinkRatio) as int
+        int shrunkHeight = (cropWindow.height * shrinkRatio) as int
+        int xOffsetDelta = ((cropWindow.width - shrunkWidth) / 2) as int
+        int yOffsetDelta = ((cropWindow.height - shrunkHeight) / 2) as int
+
+        return [
+            x: cropWindow.x + xOffsetDelta,
+            y: cropWindow.y + yOffsetDelta,
+            width: shrunkWidth,
+            height: shrunkHeight
+        ]
+    }
+
+    private static Map calculateCropWindowForXOffset(BufferedImage originalImage, Map cropWindow, int xOffset) {
+
+        Map newCropWindow = cropWindow.clone()
+
+        if(cropWindow.x + xOffset < 0) {
+            newCropWindow.x = 0
+        } else if(cropWindow.x + xOffset + cropWindow.width > originalImage.width) {
+            newCropWindow.x = originalImage.width - cropWindow.width
+        } else {
+            newCropWindow.x = cropWindow.x + xOffset
+        }
+        println newCropWindow.width
+        return newCropWindow
+    }
+
+    private static Map calculateCropWindowForYOffset(BufferedImage originalImage, Map cropWindow, int yOffset) {
+
+        Map newCropWindow = cropWindow.clone()
+
+        if(cropWindow.y + yOffset < 0) {
+            newCropWindow.y = 0
+        } else if(cropWindow.y + yOffset + cropWindow.height > originalImage.height) {
+            newCropWindow.y = originalImage.height - cropWindow.height
+        } else {
+            newCropWindow.y = cropWindow.y + yOffset
+        }
+
+        return newCropWindow
 
     }
 

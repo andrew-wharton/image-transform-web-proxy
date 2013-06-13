@@ -24,22 +24,21 @@ class ImageController {
         byte[] imageBytes = imageService.getOriginalImageData(params.pathToFile)
 
         InputStream stream = new ByteArrayInputStream(imageBytes);
-        BufferedImage originalImage = ImageIO.read(stream);
-        BufferedImage processedImage
+        BufferedImage image = ImageIO.read(stream);
 
         if(params.any{ it.key in TRIM_PARAMS }) {
-            processedImage = imageService.trim(originalImage, params)
+            image = imageService.trim(image, params)
         }
 
         if(params.any{ it.key in CROP_PARAMS }) {
-            processedImage = imageService.crop(originalImage, params)
+            image = imageService.crop(image, params)
         }
 
         if(params.any{ it.key in SCALE_PARAMS }) {
-            processedImage = imageService.scale(processedImage, params)
+            image = imageService.scale(image, params)
         }
 
-        byte[] outputBytes = processedImage ? imageService.writeToByteArray(processedImage, 0.95f) : imageBytes
+        byte[] outputBytes = image ? imageService.writeToByteArray(image, 0.95f) : imageBytes
         response.contentType = "image/jpeg"
         response.contentLength = outputBytes.length
         response.outputStream << outputBytes
