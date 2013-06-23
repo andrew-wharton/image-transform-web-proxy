@@ -14,7 +14,7 @@ import java.awt.image.BufferedImage
 
 class ImageService {
 
-    private String originalBase = "http://cdn.deciduouspress.com.au.s3-website-ap-southeast-1.amazonaws.com"
+    private String originalBase = "http://images-deciduouspress.s3-website-ap-southeast-1.amazonaws.com"
 
     GrailsApplication grailsApplication
 
@@ -181,8 +181,8 @@ class ImageService {
      * @return
      */
     @Cacheable('originalImages')
-    byte[] getOriginalImageData(String path) {
-        URL originalURL = new URL("${originalBase}/${path}")
+    byte[] getOriginalImageData(String objectId) {
+        URL originalURL = new URL("${originalBase}/${objectId}")
         InputStream inputStream = originalURL.newInputStream()
         byte[] originalImageBytes
         try {
