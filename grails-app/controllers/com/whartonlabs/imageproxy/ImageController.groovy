@@ -21,27 +21,33 @@ class ImageController {
 
     def index() {
 
-        byte[] imageBytes = imageService.getOriginalImageData(params.pathToFile)
+        try {
+            byte[] imageBytes = imageService.getOriginalImageData(params.pathToFile)
 
-        InputStream stream = new ByteArrayInputStream(imageBytes);
-        BufferedImage image = ImageIO.read(stream);
+            InputStream stream = new ByteArrayInputStream(imageBytes);
+            BufferedImage image = ImageIO.read(stream);
 
-        if(params.any{ it.key in TRIM_PARAMS }) {
-            image = imageService.trim(image, params)
+            if(params.any{ it.key in TRIM_PARAMS }) {
+                image = imageService.trim(image, params)
+            }
+
+            if(params.any{ it.key in CROP_PARAMS }) {
+                image = imageService.crop(image, params)
+            }
+
+            if(params.any{ it.key in SCALE_PARAMS }) {
+                image = imageService.scale(image, params)
+            }
+
+            byte[] outputBytes = image ? imageService.writeToByteArray(image, 0.95f) : imageBytes
+            response.contentType = "image/jpeg"
+            response.contentLength = outputBytes.length
+            response.outputStream << outputBytes
+            response.outputStream.flush()
+        } catch(ex) {
+            response.status = 404
+            return false
         }
 
-        if(params.any{ it.key in CROP_PARAMS }) {
-            image = imageService.crop(image, params)
-        }
-
-        if(params.any{ it.key in SCALE_PARAMS }) {
-            image = imageService.scale(image, params)
-        }
-
-        byte[] outputBytes = image ? imageService.writeToByteArray(image, 0.95f) : imageBytes
-        response.contentType = "image/jpeg"
-        response.contentLength = outputBytes.length
-        response.outputStream << outputBytes
-        response.outputStream.flush()
     }
 }
